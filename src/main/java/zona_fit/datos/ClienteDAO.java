@@ -5,12 +5,21 @@ import zona_fit.dominio.Cliente;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static zona_fit.conexion.Conexion.getConexion;
 
 public class ClienteDAO implements IClienteDAO {
+    private Logger logger;
+
+    public ClienteDAO() {
+        this.logger = Logger.getLogger("ZonaFitLogger");
+    }
+
     @Override
     public List<Cliente> listarClientes() {
         List<Cliente> clientes = new ArrayList<>();
@@ -30,12 +39,12 @@ public class ClienteDAO implements IClienteDAO {
                 clientes.add(cliente);
             }
         } catch (Exception e) {
-            System.out.println("Error al listar clientes: " + e.getMessage());
+            this.logger.log(Level.SEVERE, "Error al listar clientes: " + e.getMessage());
         } finally {
             try {
                 con.close();
             } catch (Exception e) {
-                System.out.println("Error al cerrar conexión: " + e.getMessage());
+                this.logger.log(Level.SEVERE, String.format("Error al cerrar conexión: %s", e.getMessage()));
             }
         }
         return clientes;
@@ -43,6 +52,29 @@ public class ClienteDAO implements IClienteDAO {
 
     @Override
     public boolean buscarClientePorId(Cliente cliente) {
+        PreparedStatement ps;
+        ResultSet rs;
+        Connection con = getConexion();
+        String sql = "SELECT * FROM cliente WHERE id = ?";
+        try {
+            ps = con.prepareStatement(sql);
+            ps.setInt(1, cliente.getId());
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                cliente.setNombre(rs.getString("nombre"));
+                cliente.setApellido(rs.getString("apellido"));
+                cliente.setMembresia(rs.getInt("membresia"));
+                return true;
+            }
+        } catch (Exception e) {
+            this.logger.log(Level.SEVERE, String.format("Error al obtener el cliente por id: %s", e.getMessage()));
+        } finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                this.logger.log(Level.SEVERE, String.format("Error al cerrar conexión: %s", e.getMessage()));
+            }
+        }
         return false;
     }
 
@@ -62,9 +94,16 @@ public class ClienteDAO implements IClienteDAO {
     }
 
     public static void main(String[] args) {
-        System.out.println("Clientes: ");
+
         ClienteDAO clienteDao = new ClienteDAO();
+        clienteDao.logger.log(Level.INFO,"Clientes");
         List<Cliente> clientes = clienteDao.listarClientes();
         clientes.forEach(System.out::println);
+
+        Cliente cliente = new Cliente(1);
+        boolean encontrado = clienteDao.buscarClientePorId(cliente);
+        if (encontrado) {
+            clienteDao.logger.log(Level.INFO, "Cliente encontrado: {0}", cliente);
+        }
     }
 }
