@@ -117,16 +117,25 @@ public class ClienteDAO implements IClienteDAO {
     }
 
     public static void main(String[] args) {
-
         ClienteDAO clienteDao = new ClienteDAO();
+
+
+//        Cliente cliente = new Cliente(1);
+//        boolean encontrado = clienteDao.buscarClientePorId(cliente);
+//        if (encontrado) {
+//            clienteDao.logger.log(Level.INFO, "Cliente encontrado: {0}", cliente);
+//        }
+
+        Cliente nuevoCliente = new Cliente("Jill", "Valentine", 413);
+        boolean agregado = clienteDao.agregarCliente(nuevoCliente);
+        if (agregado) {
+            clienteDao.logger.log(Level.INFO, "Se agregó el cliente: " + nuevoCliente);
+        } else {
+            clienteDao.logger.log(Level.SEVERE, "No se agregó el cliente: " + nuevoCliente);
+        }
+
         clienteDao.logger.log(Level.INFO,"Clientes");
         List<Cliente> clientes = clienteDao.listarClientes();
         clientes.forEach(System.out::println);
-
-        Cliente cliente = new Cliente(1);
-        boolean encontrado = clienteDao.buscarClientePorId(cliente);
-        if (encontrado) {
-            clienteDao.logger.log(Level.INFO, "Cliente encontrado: {0}", cliente);
-        }
     }
 }
